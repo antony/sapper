@@ -1,6 +1,6 @@
 import relative from 'require-relative';
-import { CompileResult } from './interfaces';
-import WebpackResult from './WebpackResult';
+import { CompileResult } from '../interfaces';
+import WebpackResult from './Result';
 
 let webpack: any;
 

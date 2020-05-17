@@ -1,6 +1,6 @@
 import * as path from 'path';
-import RollupCompiler from './RollupCompiler';
-import { WebpackCompiler } from './WebpackCompiler';
+import { RollupCompiler } from '../compilers/rollup/Compiler';
+import { WebpackCompiler } from '../compilers/webpack/Compiler';
 import { set_dev, set_src, set_dest } from '../../config/env';
 import { Bundler } from '../../bundlers';
 

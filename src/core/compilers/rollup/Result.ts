@@ -1,11 +1,11 @@
 import * as path from 'path';
 import colors from 'kleur';
 import pb from 'pretty-bytes';
-import RollupCompiler from './RollupCompiler';
-import extract_css from './extract_css';
-import { left_pad } from '../../utils';
-import { CompileResult, BuildInfo, CompileError, Chunk, CssFile } from './interfaces';
-import { ManifestData, Dirs } from '../../interfaces';
+import { RollupCompiler } from './Compiler';
+import extract_css from '../extract_css';
+import { left_pad } from '../../../utils';
+import { CompileResult, BuildInfo, CompileError, Chunk, CssFile } from '../interfaces';
+import { ManifestData, Dirs } from '../../../interfaces';
 
 export default class RollupResult implements CompileResult {
 	duration: number;

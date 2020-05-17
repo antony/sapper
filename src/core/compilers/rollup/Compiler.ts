@@ -1,11 +1,11 @@
 import * as path from 'path';
 import relative from 'require-relative';
-import { CompileResult } from './interfaces';
-import RollupResult from './RollupResult';
+import { CompileResult } from '../interfaces';
+import RollupResult from './Result';
 
 let rollup: any;
 
-export default class RollupCompiler {
+export class RollupCompiler {
 	_: Promise<any>;
 	_oninvalid: (filename: string) => void;
 	_start: number;
