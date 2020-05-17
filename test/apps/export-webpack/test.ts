@@ -1,12 +1,13 @@
 import * as assert from 'assert';
 import * as api from '../../../api';
 import * as fs from 'fs';
+import { Bundler } from '../../../src/bundlers';
 
 describe('export-webpack', function() {
 	this.timeout(10000);
 
 	// hooks
-	before('build app', () => api.build({ cwd: __dirname, bundler: 'webpack' }));
+	before('build app', () => api.build({ cwd: __dirname, bundler: Bundler.Webpack }));
 	before('export app', () => api.export({ cwd: __dirname }));
 
 	// tests

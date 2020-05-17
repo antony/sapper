@@ -5,6 +5,7 @@ import colors from 'kleur';
 import * as pkg from '../package.json';
 import { elapsed, repeat, left_pad, format_milliseconds } from './utils';
 import { InvalidEvent, ErrorEvent, FatalEvent, BuildEvent, ReadyEvent } from './interfaces';
+import { Bundler } from './bundlers';
 
 const prog = sade('sapper').version(pkg.version);
 
@@ -24,7 +25,7 @@ prog.command('dev')
 	.option('--dev-port', 'Specify a port for development server')
 	.option('--hot', 'Use hot module replacement (requires webpack)', true)
 	.option('--live', 'Reload on changes if not using --hot', true)
-	.option('--bundler', 'Specify a bundler (rollup or webpack)')
+	.option('--bundler', 'Specify a bundler (rollup, nollup or webpack)')
 	.option('--cwd', 'Current working directory', '.')
 	.option('--src', 'Source directory', 'src')
 	.option('--routes', 'Routes directory', 'src/routes')
@@ -38,7 +39,7 @@ prog.command('dev')
 		'dev-port': number,
 		live: boolean,
 		hot: boolean,
-		bundler?: 'rollup' | 'webpack',
+		bundler?: Bundler,
 		cwd: string,
 		src: string,
 		routes: string,
@@ -159,7 +160,7 @@ prog.command('build [dest]')
 	.action(async (dest = '__sapper__/build', opts: {
 		port: string,
 		legacy: boolean,
-		bundler?: 'rollup' | 'webpack',
+		bundler?: Bundler,
 		cwd: string,
 		src: string,
 		routes: string,
@@ -210,7 +211,7 @@ prog.command('export [dest]')
 	.action(async (dest = '__sapper__/export', opts: {
 		build: boolean,
 		legacy: boolean,
-		bundler?: 'rollup' | 'webpack',
+		bundler?: Bundler,
 		basepath?: string,
 		host?: string,
 		concurrent: number,
@@ -272,7 +273,7 @@ prog.parse(process.argv, { unknown: (arg: string) => `Unknown option: ${arg}` })
 
 
 async function _build(
-	bundler: 'rollup' | 'webpack',
+	bundler: Bundler,
 	legacy: boolean,
 	cwd: string,
 	src: string,

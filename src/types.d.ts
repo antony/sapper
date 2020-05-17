@@ -1,1 +1,1 @@
-declare module 'svelte/compiler';
+declare module 'svelte/compiler'

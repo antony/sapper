@@ -2,6 +2,7 @@ import * as path from 'path';
 import RollupCompiler from './RollupCompiler';
 import { WebpackCompiler } from './WebpackCompiler';
 import { set_dev, set_src, set_dest } from '../../config/env';
+import { Bundler } from '../../bundlers';
 
 export type Compiler = RollupCompiler | WebpackCompiler;
 
@@ -12,7 +13,7 @@ export type Compilers = {
 }
 
 export default async function create_compilers(
-	bundler: 'rollup' | 'webpack',
+	bundler: Bundler,
 	cwd: string,
 	src: string,
 	dest: string,
@@ -22,9 +23,9 @@ export default async function create_compilers(
 	set_src(src);
 	set_dest(dest);
 
-	if (bundler === 'rollup') {
+	if (bundler === Bundler.Rollup) {
 		const config = await RollupCompiler.load_config(cwd);
-		validate_config(config, 'rollup');
+		validate_config(config, bundler);
 
 		normalize_rollup_config(config.client);
 		normalize_rollup_config(config.server);
@@ -40,9 +41,9 @@ export default async function create_compilers(
 		};
 	}
 
-	if (bundler === 'webpack') {
+	if (bundler === Bundler.Webpack) {
 		const config = require(path.resolve(cwd, 'webpack.config.js'));
-		validate_config(config, 'webpack');
+		validate_config(config, bundler);
 
 		return {
 			client: new WebpackCompiler(config.client),
@@ -55,7 +56,7 @@ export default async function create_compilers(
 	throw new Error(`Invalid bundler option '${bundler}'`);
 }
 
-function validate_config(config: any, bundler: 'rollup' | 'webpack') {
+function validate_config(config: any, bundler: Bundler) {
 	if (!config.client || !config.server) {
 		throw new Error(`${bundler}.config.js must export a { client, server, serviceworker? } object`);
 	}

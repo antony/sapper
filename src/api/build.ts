@@ -9,6 +9,7 @@ import { noop } from './utils/noop';
 import validate_bundler from './utils/validate_bundler';
 import { copy_runtime } from './utils/copy_runtime';
 import { rimraf, mkdirp } from './utils/fs_utils';
+import { Bundler } from '../bundlers';
 
 type Opts = {
 	cwd?: string;
@@ -18,7 +19,7 @@ type Opts = {
 	output?: string;
 	static?: string;
 	legacy?: boolean;
-	bundler?: 'rollup' | 'webpack';
+	bundler?: Bundler;
 	ext?: string;
 	oncompile?: ({ type, result }: { type: string, result: CompileResult }) => void;
 };
@@ -45,7 +46,7 @@ export async function build({
 	output = path.resolve(cwd, output);
 	static_files = path.resolve(cwd, static_files);
 
-	if (legacy && bundler === 'webpack') {
+	if (legacy && bundler === Bundler.Webpack) {
 		throw new Error(`Legacy builds are not supported for projects using webpack`);
 	}
 

@@ -15,6 +15,7 @@ import read_template from '../core/read_template';
 import { noop } from './utils/noop';
 import { copy_runtime } from './utils/copy_runtime';
 import { rimraf, mkdirp } from './utils/fs_utils';
+import { Bundler } from '../bundlers'
 
 type Opts = {
 	cwd?: string,
@@ -27,7 +28,7 @@ type Opts = {
 	live?: boolean,
 	hot?: boolean,
 	'devtools-port'?: number,
-	bundler?: 'rollup' | 'webpack',
+	bundler?: Bundler,
 	port?: number,
 	ext: string
 };
@@ -37,7 +38,7 @@ export function dev(opts: Opts) {
 }
 
 class Watcher extends EventEmitter {
-	bundler: 'rollup' | 'webpack';
+	bundler: Bundler;
 	dirs: {
 		cwd: string;
 		src: string;
@@ -154,7 +155,7 @@ class Watcher extends EventEmitter {
 
 		rimraf(dest);
 		mkdirp(`${dest}/client`);
-		if (this.bundler === 'rollup') copy_shimport(dest);
+		if (this.bundler === Bundler.Rollup) copy_shimport(dest);
 
 		if (!this.dev_port) this.dev_port = await ports.find(10000);
 
@@ -253,7 +254,7 @@ class Watcher extends EventEmitter {
 									process: this.proc
 								});
 
-								if (this.hot && this.bundler === 'webpack') {
+								if (this.hot && this.bundler === Bundler.Webpack) {
 									this.dev_server.send({
 										status: 'completed'
 									});

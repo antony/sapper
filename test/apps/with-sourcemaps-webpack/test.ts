@@ -2,12 +2,13 @@ import { build } from '../../../api';
 import * as assert from "assert";
 import * as fs from 'fs';
 import * as path from "path";
+import { Bundler } from '../../../src/bundlers';
 
 describe('with-sourcemaps-webpack', function() {
 	this.timeout(10000);
 
 	// hooks
-	before('build app', () => build({ cwd: __dirname, bundler: 'webpack' }));
+	before('build app', () => build({ cwd: __dirname, bundler: Bundler.Webpack }));
 
 	// tests
 	it('does not put sourcemap files in service worker shell', async () => {

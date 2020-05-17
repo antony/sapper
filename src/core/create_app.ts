@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { posixify, stringify, walk, write_if_changed } from '../utils';
 import { Page, PageComponent, ManifestData } from '../interfaces';
+import { Bundler } from '../bundlers';
 
 export function create_app({
 	bundler,
@@ -93,7 +94,7 @@ function generate_client_manifest(
 
 	const components = `[
 		${manifest_data.components.map((component, i) => {
-			const annotation = bundler === 'webpack'
+			const annotation = bundler === Bundler.Webpack
 				? `/* webpackChunkName: "${component.name}" */ `
 				: '';
 
