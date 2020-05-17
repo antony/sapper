@@ -26,6 +26,7 @@ prog.command('dev')
 	.option('--hot', 'Use hot module replacement (requires webpack)', true)
 	.option('--live', 'Reload on changes if not using --hot', true)
 	.option('--bundler', 'Specify a bundler (rollup, nollup or webpack)')
+	.option('--nollup', 'Optimise development builds with nollup, if using rollup')
 	.option('--cwd', 'Current working directory', '.')
 	.option('--src', 'Source directory', 'src')
 	.option('--routes', 'Routes directory', 'src/routes')
@@ -40,6 +41,7 @@ prog.command('dev')
 		live: boolean,
 		hot: boolean,
 		bundler?: Bundler,
+		nollup?: boolean,
 		cwd: string,
 		src: string,
 		routes: string,
@@ -63,6 +65,7 @@ prog.command('dev')
 				live: opts.live,
 				hot: opts.hot,
 				bundler: opts.bundler,
+				nollup: opts.nollup,
 				ext: opts.ext
 			});
 

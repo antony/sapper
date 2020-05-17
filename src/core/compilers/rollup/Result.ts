@@ -7,7 +7,7 @@ import { left_pad } from '../../../utils';
 import { CompileResult, BuildInfo, CompileError, Chunk, CssFile } from '../interfaces';
 import { ManifestData, Dirs } from '../../../interfaces';
 
-export default class RollupResult implements CompileResult {
+export class RollupResult implements CompileResult {
 	duration: number;
 	errors: CompileError[];
 	warnings: CompileError[];

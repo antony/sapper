@@ -1,27 +1,95 @@
 import * as path from 'path';
 import relative from 'require-relative';
 import { CompileResult } from '../interfaces';
-import RollupResult from './Result';
-
-let rollup: any;
+import { RollupResult } from './Result';
+import { validate_config } from '../validate_config';
+import { Bundler } from '../../../bundlers'
+import CheapWatch from 'cheap-watch'
 
 export class RollupCompiler {
 	_: Promise<any>;
 	_oninvalid: (filename: string) => void;
 	_start: number;
+	apiMethod: string;
 	input: string;
 	warnings: any[];
 	errors: any[];
 	chunks: any[];
 	css_files: Array<{ id: string, code: string }>;
+	compiler: any;
+	cwd: string;
+	dev: boolean;
+	use_nollup: boolean;
 
-	constructor(config: any) {
-		this._ = this.get_config(config);
+	constructor(config_path: string, bundle_name: string, options: any) {
 		this.input = null;
 		this.warnings = [];
 		this.errors = [];
 		this.chunks = [];
 		this.css_files = [];
+		this.compiler = null;
+		this.cwd = path.dirname(config_path);
+		this.dev = options.dev;
+		this.use_nollup = options.nollup;
+
+		this._ = this.initialize(config_path, bundle_name);
+	}
+
+	async initialize (config_path: string, bundle_name: string) {
+		const { config, compiler } = await this.load_config(config_path);
+		const bundle_config = config[bundle_name];
+
+	  validate_config(config, Bundler.Rollup);
+
+		this.normalize_rollup_config(bundle_config)
+
+		this.compiler = compiler;
+		return this.get_config(bundle_config);
+	}
+
+	get is_nollup () {
+		return this.dev && this.use_nollup
+	}
+
+	async load_config(config_path: string) {
+		const compiler = relative(this.is_nollup ? 'nollup' : 'rollup', this.cwd);
+		const compile_function = this.is_nollup ? compiler : compiler.rollup;
+
+		const bundle = await compile_function({
+			input: config_path,
+			inlineDynamicImports: true,
+			external: (id: string) => {
+				return (id[0] !== '.' && !path.isAbsolute(id)) || id.slice(-5, id.length) === '.json';
+			}
+		});
+
+		const resp = await bundle.generate({ format: 'cjs' });
+		const { code } = resp.output ? resp.output[0] : resp;
+
+		// temporarily override require
+		const defaultLoader = require.extensions['.js'];
+		require.extensions['.js'] = (module: any, filename: string) => {
+			if (filename === config_path) {
+				module._compile(code, filename);
+			} else {
+				defaultLoader(module, filename);
+			}
+		};
+
+		const config: any = require(config_path);
+		delete require.cache[config_path];
+
+		return { config, compiler };
+	}
+
+	normalize_rollup_config(config: any) {
+		if (typeof config.input === 'string') {
+			config.input = path.normalize(config.input);
+		} else {
+			for (const name in config.input) {
+				config.input[name] = path.normalize(config.input[name]);
+			}
+		}
 	}
 
 	async get_config(mod: any) {
@@ -62,11 +130,12 @@ export class RollupCompiler {
 	async compile(): Promise<CompileResult> {
 		const config = await this._;
 		const sourcemap = config.output.sourcemap;
+		const compile_function = this.is_nollup ? this.compiler : this.compiler.rollup;
 
 		const start = Date.now();
 
 		try {
-			const bundle = await rollup.rollup(config);
+			const bundle = await compile_function(config);
 			await bundle.write(config.output);
 
 			return new RollupResult(Date.now() - start, this, sourcemap);
@@ -88,7 +157,13 @@ export class RollupCompiler {
 		const config = await this._;
 		const sourcemap = config.output.sourcemap;
 
-		const watcher = rollup.watch(config);
+		if (this.is_nollup) {
+			console.info("Do some watching, somehow");
+
+			return;
+		}
+
+		const watcher = this.compiler.watch(config);
 
 		watcher.on('change', (id: string) => {
 			this.chunks = [];
@@ -135,37 +210,5 @@ export class RollupCompiler {
 					console.log(`Unexpected event ${event.code}`);
 			}
 		});
-	}
-
-	static async load_config(cwd: string) {
-		if (!rollup) rollup = relative('rollup', cwd);
-
-		const input = path.resolve(cwd, 'rollup.config.js');
-
-		const bundle = await rollup.rollup({
-			input,
-			inlineDynamicImports: true,
-			external: (id: string) => {
-				return (id[0] !== '.' && !path.isAbsolute(id)) || id.slice(-5, id.length) === '.json';
-			}
-		});
-
-		const resp = await bundle.generate({ format: 'cjs' });
-		const { code } = resp.output ? resp.output[0] : resp;
-
-		// temporarily override require
-		const defaultLoader = require.extensions['.js'];
-		require.extensions['.js'] = (module: any, filename: string) => {
-			if (filename === input) {
-				module._compile(code, filename);
-			} else {
-				defaultLoader(module, filename);
-			}
-		};
-
-		const config: any = require(input);
-		delete require.cache[input];
-
-		return config;
 	}
 }

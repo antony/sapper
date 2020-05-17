@@ -1,15 +1,14 @@
 import relative from 'require-relative';
 import { CompileResult } from '../interfaces';
-import WebpackResult from './Result';
-
-let webpack: any;
+import { WebpackResult } from './Result';
 
 export class WebpackCompiler {
 	_: any;
 
-	constructor(config: any) {
-		if (!webpack) webpack = relative('webpack', process.cwd());
-		this._ = webpack(config);
+	constructor(config_path: string, bundle_name: string) {
+		const webpack = relative('webpack', process.cwd());
+
+		this._ = webpack(require(config_path)[bundle_name]);
 	}
 
 	oninvalid(cb: (filename: string) => void) {

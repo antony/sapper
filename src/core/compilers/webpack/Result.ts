@@ -29,7 +29,7 @@ function munge_warning_or_error(message: string) {
 	};
 }
 
-export default class WebpackResult implements CompileResult {
+export class WebpackResult implements CompileResult {
 	duration: number;
 	errors: CompileError[];
 	warnings: CompileError[];

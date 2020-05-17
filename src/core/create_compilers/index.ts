@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { NollupCompiler } from '../compilers/nollup/Compiler';
 import { RollupCompiler } from '../compilers/rollup/Compiler';
 import { WebpackCompiler } from '../compilers/webpack/Compiler';
 import { set_dev, set_src, set_dest } from '../../config/env';
@@ -12,8 +13,18 @@ export type Compilers = {
 	serviceworker?: Compiler;
 }
 
+function get_compilers (config_path: string, compiler: any, dev: boolean) {
+	const requested_bundles = [ 'client', 'server', 'serviceworker' ]
+
+	return requested_bundles.reduce((compilers, bundle_name) => {
+		const loaded = new compiler(config_path, bundle_name, dev)
+		return { ...compilers, ...loaded ? { [bundle_name]: loaded } : {}}
+	}, {})
+}
+
 export default async function create_compilers(
 	bundler: Bundler,
+	nollup: boolean,
 	cwd: string,
 	src: string,
 	dest: string,
@@ -23,51 +34,23 @@ export default async function create_compilers(
 	set_src(src);
 	set_dest(dest);
 
-	if (bundler === Bundler.Rollup) {
-		const config = await RollupCompiler.load_config(cwd);
-		validate_config(config, bundler);
-
-		normalize_rollup_config(config.client);
-		normalize_rollup_config(config.server);
-
-		if (config.serviceworker) {
-			normalize_rollup_config(config.serviceworker);
-		}
-
-		return {
-			client: new RollupCompiler(config.client),
-			server: new RollupCompiler(config.server),
-			serviceworker: config.serviceworker && new RollupCompiler(config.serviceworker)
-		};
-	}
-
-	if (bundler === Bundler.Webpack) {
-		const config = require(path.resolve(cwd, 'webpack.config.js'));
-		validate_config(config, bundler);
-
-		return {
-			client: new WebpackCompiler(config.client),
-			server: new WebpackCompiler(config.server),
-			serviceworker: config.serviceworker && new WebpackCompiler(config.serviceworker)
-		};
-	}
-
-	// this shouldn't be possible...
-	throw new Error(`Invalid bundler option '${bundler}'`);
-}
-
-function validate_config(config: any, bundler: Bundler) {
-	if (!config.client || !config.server) {
-		throw new Error(`${bundler}.config.js must export a { client, server, serviceworker? } object`);
-	}
-}
-
-function normalize_rollup_config(config: any) {
-	if (typeof config.input === 'string') {
-		config.input = path.normalize(config.input);
-	} else {
-		for (const name in config.input) {
-			config.input[name] = path.normalize(config.input[name]);
+	const compilers = {
+		[Bundler.Rollup]: {
+			config_path: path.resolve(cwd, 'rollup.config.js'),
+			compiler: RollupCompiler,
+			options: {
+				dev,
+				nollup
+			}
+		},
+		[Bundler.Webpack]: {
+			config_path: path.resolve(cwd, 'webpack.config.js'),
+			compiler: WebpackCompiler,
+			options: {}
 		}
 	}
+
+	const { config_path, compiler, options } = compilers[bundler]
+	return get_compilers(config_path, compiler, options);
 }
+

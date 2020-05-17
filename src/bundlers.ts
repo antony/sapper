@@ -2,6 +2,5 @@
 
 export enum Bundler {
   Rollup = 'rollup',
-  Webpack = 'webpack',
-  Nollup = 'nollup'
+  Webpack = 'webpack'
 } 

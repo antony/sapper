@@ -29,6 +29,7 @@ type Opts = {
 	hot?: boolean,
 	'devtools-port'?: number,
 	bundler?: Bundler,
+	nollup?: boolean,
 	port?: number,
 	ext: string
 };
@@ -39,6 +40,8 @@ export function dev(opts: Opts) {
 
 class Watcher extends EventEmitter {
 	bundler: Bundler;
+	nollup: boolean;
+
 	dirs: {
 		cwd: string;
 		src: string;
@@ -83,6 +86,7 @@ class Watcher extends EventEmitter {
 		hot,
 		'devtools-port': devtools_port,
 		bundler,
+		nollup,
 		port = +process.env.PORT,
 		ext
 	}: Opts) {
@@ -90,7 +94,8 @@ class Watcher extends EventEmitter {
 
 		cwd = path.resolve(cwd);
 
-		this.bundler = validate_bundler(bundler);
+		this.bundler = validate_bundler(bundler, nollup);
+		this.nollup = nollup;
 		this.dirs = {
 			cwd,
 			src: path.resolve(cwd, src),
@@ -224,7 +229,7 @@ class Watcher extends EventEmitter {
 		let deferred = new Deferred();
 
 		// TODO watch the configs themselves?
-		const compilers: Compilers = await create_compilers(this.bundler, cwd, src, dest, true);
+		const compilers: Compilers = await create_compilers(this.bundler, this.nollup, cwd, src, dest, true);
 
 		const emitFatal = () => {
 			this.emit('fatal', <FatalEvent>{

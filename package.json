@@ -29,7 +29,6 @@
     "@types/node": "=8",
     "@types/puppeteer": "^1.19.0",
     "agadoo": "^1.0.1",
-    "cheap-watch": "^1.0.2",
     "cookie": "^0.4.0",
     "devalue": "^2.0.0",
     "eslint": "^5.16.0",
