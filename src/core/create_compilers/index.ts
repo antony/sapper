@@ -11,15 +11,16 @@ export type Compilers = {
 	client: Compiler;
 	server: Compiler;
 	serviceworker?: Compiler;
+	uses_dev_server: boolean;
 }
 
-function get_compilers (config_path: string, compiler: any, dev: boolean) {
+function get_compilers (config_path: string, compiler: any, options: any) {
 	const requested_bundles = [ 'client', 'server', 'serviceworker' ]
 
 	return requested_bundles.reduce((compilers, bundle_name) => {
-		const loaded = new compiler(config_path, bundle_name, dev)
+		const loaded = new compiler(config_path, bundle_name, options.dev)
 		return { ...compilers, ...loaded ? { [bundle_name]: loaded } : {}}
-	}, {})
+	}, { uses_dev_server: options.uses_dev_server })
 }
 
 export default async function create_compilers(
@@ -40,13 +41,17 @@ export default async function create_compilers(
 			compiler: RollupCompiler,
 			options: {
 				dev,
-				nollup
+				nollup,
+				uses_dev_server: !nollup
 			}
 		},
 		[Bundler.Webpack]: {
 			config_path: path.resolve(cwd, 'webpack.config.js'),
 			compiler: WebpackCompiler,
-			options: {}
+			options: {
+				dev,
+				uses_dev_server: true
+			}
 		}
 	}
 

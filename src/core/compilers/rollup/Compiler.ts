@@ -4,7 +4,6 @@ import { CompileResult } from '../interfaces';
 import { RollupResult } from './Result';
 import { validate_config } from '../validate_config';
 import { Bundler } from '../../../bundlers'
-import CheapWatch from 'cheap-watch'
 
 export class RollupCompiler {
 	_: Promise<any>;
@@ -30,7 +29,7 @@ export class RollupCompiler {
 		this.compiler = null;
 		this.cwd = path.dirname(config_path);
 		this.dev = options.dev;
-		this.use_nollup = options.nollup;
+		this.use_nollup = bundle_name === 'client' && options.dev && options.use_nollup;
 
 		this._ = this.initialize(config_path, bundle_name);
 	}
@@ -47,13 +46,9 @@ export class RollupCompiler {
 		return this.get_config(bundle_config);
 	}
 
-	get is_nollup () {
-		return this.dev && this.use_nollup
-	}
-
 	async load_config(config_path: string) {
-		const compiler = relative(this.is_nollup ? 'nollup' : 'rollup', this.cwd);
-		const compile_function = this.is_nollup ? compiler : compiler.rollup;
+		const compiler = relative(this.use_nollup ? 'nollup/lib/dev-server' : 'rollup', this.cwd);
+		const compile_function = this.use_nollup ? compiler : compiler.rollup;
 
 		const bundle = await compile_function({
 			input: config_path,
@@ -130,16 +125,17 @@ export class RollupCompiler {
 	async compile(): Promise<CompileResult> {
 		const config = await this._;
 		const sourcemap = config.output.sourcemap;
-		const compile_function = this.is_nollup ? this.compiler : this.compiler.rollup;
+		const compile_function = this.use_nollup ? this.compiler : this.compiler.rollup;
+		const generate_function = this.use_nollup ? 'generate' : 'write';
 
 		const start = Date.now();
 
 		try {
 			const bundle = await compile_function(config);
-			await bundle.write(config.output);
-
+			await bundle[generate_function](config.output);
 			return new RollupResult(Date.now() - start, this, sourcemap);
 		} catch (err) {
+			console.log(err)
 			if (err.filename) {
 				// TODO this is a bit messy. Also, can
 				// Rollup emit other kinds of error?
@@ -156,13 +152,6 @@ export class RollupCompiler {
 	async watch(cb: (err?: Error, stats?: any) => void) {
 		const config = await this._;
 		const sourcemap = config.output.sourcemap;
-
-		if (this.is_nollup) {
-			console.info("Do some watching, somehow");
-
-			return;
-		}
-
 		const watcher = this.compiler.watch(config);
 
 		watcher.on('change', (id: string) => {

@@ -216,7 +216,7 @@ class Watcher extends EventEmitter {
 			)
 		);
 
-		if (this.live) {
+		if (this.live && this.dev_server) {
 			this.filewatchers.push(
 				fs.watch(`${src}/template.html`, () => {
 					this.dev_server.send({
@@ -230,6 +230,11 @@ class Watcher extends EventEmitter {
 
 		// TODO watch the configs themselves?
 		const compilers: Compilers = await create_compilers(this.bundler, this.nollup, cwd, src, dest, true);
+
+		// Nollup provides its own dev server & protocol
+		if (compilers.uses_dev_server) {
+			this.dev_server = new DevServer(this.dev_port);
+		}
 
 		const emitFatal = () => {
 			this.emit('fatal', <FatalEvent>{
@@ -259,11 +264,11 @@ class Watcher extends EventEmitter {
 									process: this.proc
 								});
 
-								if (this.hot && this.bundler === Bundler.Webpack) {
+								if (this.dev_server && this.hot && this.bundler === Bundler.Webpack) {
 									this.dev_server.send({
 										status: 'completed'
 									});
-								} else if (this.live) {
+								} else if (this.dev_server && this.live) {
 									this.dev_server.send({
 										action: 'reload'
 									});
