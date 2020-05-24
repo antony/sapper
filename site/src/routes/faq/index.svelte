@@ -32,6 +32,8 @@
 			<p>{@html faq.answer}</p>
 		</article>
 	{/each}
+
+	<p>See also the <a href="https://svelte.dev/faq" rel="external">Svelte FAQ</a> for questions relating to Svelte directly.</p>
 </div>
 
 <style>
