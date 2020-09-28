@@ -1,5 +1,5 @@
 {
-  "name": "sapper",
+  "name": "@beyonk/sapper",
   "version": "0.27.16",
   "description": "The next small thing in web development, powered by Svelte",
   "bin": {
