@@ -416,7 +416,7 @@ class Sade {
 
 var lib$1 = (str, isOne) => new Sade(str, isOne);
 
-var version = "0.27.16";
+var version = "0.27.17";
 
 const prog = lib$1('sapper').version(version);
 
