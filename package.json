@@ -65,6 +65,7 @@
   "scripts": {
     "test": "mocha --opts mocha.opts",
     "pretest": "npm run build",
+    "postinstall": "npm run build",
     "build": "rm -rf dist && rollup -c",
     "prepare": "npm run build",
     "dev": "rollup -cw",
